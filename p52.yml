@@ -1,0 +1,21 @@
+---
+- hosts: webservers
+  tasks:
+  - name: copy p1.sh file to remote system
+    copy: 
+      src: p1.sh
+      dest: /tmp/pa.sh
+      mode: 777
+    notify: call
+  handlers:
+  - name: call1
+    shell: /bin/bash /tmp/pa.sh >/var/log/r1.log
+    listen: call
+  - name: call2
+    fetch:
+      src: /var/log/r1.log
+      dest: /tmp
+    listen: call
+  - name: call3
+    debug: msg="OK"
+    listen: call

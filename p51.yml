@@ -1,0 +1,16 @@
+---
+- hosts: localhost
+  tasks:
+  - name: Task-1
+    command: echo "OK"
+    notify: call
+  - name: Task-2
+    command: echo "Hello"
+    notify: call
+  handlers:
+  - name: ONE
+    command: echo "Action-1"
+    listen: call
+  - name: TWO
+    command: echo "Action-2"
+    listen: call

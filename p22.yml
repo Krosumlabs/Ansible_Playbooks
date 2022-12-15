@@ -1,0 +1,9 @@
+---
+- hosts: webservers
+  tasks:
+  - name: Task-1
+    command: uptime
+    register: result
+  - name: Task-2
+    debug: var=result.stdout
+    when: result.rc == 0

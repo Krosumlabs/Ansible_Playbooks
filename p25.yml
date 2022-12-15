@@ -1,0 +1,8 @@
+---
+- hosts: webservers 
+  tasks:
+  - name: execute command - display kernel details
+    shell: uname -a 
+    register: result
+  - debug: msg="{{result.stdout}}"
+    when: ansible_distribution == "OracleLinux" or ansible_distribution == "Ubuntu"

@@ -1,0 +1,14 @@
+---
+- hosts: localhost
+  vars:
+  - mydict:
+     K1: V1
+     IP: 10.20.30.40
+     interface: eth0
+     proto: static
+     onboot: yes
+  tasks:
+  - debug: var=mydict
+  - debug: var=mydict["IP"]
+  - debug: var=mydict.IP
+ 

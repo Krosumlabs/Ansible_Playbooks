@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  vars:
+  - fsinfo: [xfs,/dev/xvdb1,50GB,0.2]
+  tasks:
+  - debug: msg="item value is:{{item}}"
+    loop:
+    - "{{fsinfo}}"

@@ -1,0 +1,20 @@
+---
+- hosts: localhost
+  tasks:
+  - block:
+    - name: task-1
+      debug: msg="OK-1"
+    - name: task-2
+      command: /bin/false
+    - name: task-3
+      command: /bin/true
+    rescue:
+    - name: rescue block
+      debug: msg="Handling Error"
+    always: 
+    - name: Always block
+      debug: msg="Thank you"
+  - name: Task-II
+    debug: msg="This is outside the block section"
+  - name: Task-III
+    debug: msg="This is also outside the block"

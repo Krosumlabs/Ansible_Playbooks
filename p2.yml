@@ -1,0 +1,10 @@
+---
+- name: to run command module
+  hosts: student
+  tasks:
+  - name: Task-1 to display DD/MM/YYYY format
+    command: echo "Today:`date +%D`"
+  - name: Task-2 to display Login shell and version
+    command: echo "Login shell $SHELL Version:$BASH_VERSION"
+  - name : Taks-3 to display current process
+    command: ps

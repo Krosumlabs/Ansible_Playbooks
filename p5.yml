@@ -1,0 +1,9 @@
+---
+- name: debug module demo
+  hosts: localhost
+  tasks: 
+  - name: display Welcome message to monitor
+    debug: msg="Welcome to Ansible world"
+  - name: Task-2
+    debug:
+      msg: Welcome To Ansible 2.9 Version

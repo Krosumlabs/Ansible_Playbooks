@@ -1,0 +1,9 @@
+---
+- hosts: webservers
+  tasks:
+  - name: Task-1
+    yum: name="ksh" state=installed
+    when: ansible_os_family == "RedHat"
+  - name: Task-2
+    apt: name="ksh" state=present 
+    when: ansible_os_family == "Debian"

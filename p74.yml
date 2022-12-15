@@ -1,0 +1,11 @@
+---
+- hosts: localhost
+  tasks:
+  - block:
+    - name: task-1
+      debug: msg="OK-1"
+    - name: task-2
+      command: /bin/false
+    - name: task-3
+      command: /bin/true
+    ignore_errors: yes

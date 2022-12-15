@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  vars:
+  - myvar: [D1,D2,D3]
+  tasks:
+  - name: Convert to json
+    debug: msg="{{myvar|to_json}}"
+  

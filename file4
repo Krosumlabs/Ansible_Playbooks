@@ -1,0 +1,3 @@
+{% for v in net_info %}
+ {{v}}={{net_info[v]}}
+{% endfor %}

@@ -1,0 +1,3 @@
+[webservers]
+example
+student ansible_ssh_pass=apelix

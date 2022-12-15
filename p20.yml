@@ -1,0 +1,4 @@
+---
+- hosts: all  # all the groups from inventory file.  all - keyword
+  tasks:
+  - debug: msg="App name is:{{myapp}} Running port number is:{{myport}}"

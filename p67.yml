@@ -1,0 +1,7 @@
+---
+- name: yml to json format
+  hosts: localhost
+  tasks:
+  - copy: 
+     content: "{{ansible_facts|to_json}}"
+     dest: /tmp/p1.json

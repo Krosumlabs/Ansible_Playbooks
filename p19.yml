@@ -1,0 +1,5 @@
+---
+- hosts: [webservers,QA]
+  tasks:
+  - debug: var=port
+  - debug: msg="Running app port:{{port}}"

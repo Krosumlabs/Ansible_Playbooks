@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  vars_prompt:
+  - name: mypkg
+    prompt: "Enter a package name:"
+  tasks:
+  - name: Task-1
+    debug: msg="Input package name is:{{mypkg}}"

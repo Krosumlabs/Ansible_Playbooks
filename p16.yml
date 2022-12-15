@@ -1,0 +1,5 @@
+---
+- hosts: webservers
+  tasks: 
+  - name: demo - ansible variable
+    debug: msg="Memory space:{{ansible_memfree_mb}}"

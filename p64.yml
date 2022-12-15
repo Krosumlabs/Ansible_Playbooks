@@ -1,0 +1,14 @@
+---
+- hosts: student
+  tasks:
+  - name: task-1
+    command: sleep 120
+    async: 30
+    poll: 0
+    register: result
+  - debug: msg="OK"
+  - name: check the job status in background
+    async_status:
+      jid: "{{result.ansible_job_id}}"
+    register: job_result
+  - debug: var=job_result

@@ -1,0 +1,11 @@
+---
+- hosts: localhost
+  tasks:
+  - copy: 
+      content: "{{ansible_facts|to_json}}"
+      dest: /tmp/p1.json
+  - command: cat /tmp/p1.json
+    register: result
+  - name: task-2
+    set_fact: r="{{result}}"
+  - debug var=r

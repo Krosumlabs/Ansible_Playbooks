@@ -1,0 +1,13 @@
+---
+- hosts: student
+  tasks:
+  - name: wait for the service to start listening on port 80
+    wait_for:
+      port: 9100
+      state: started 
+      timeout: 5
+      delay: 3
+  - name: taks-2
+    debug: msg="OK"
+  - name: taks-3
+    debug: msg="OK"

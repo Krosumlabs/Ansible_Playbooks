@@ -1,0 +1,15 @@
+---
+- hosts: localhost
+  vars_prompt:
+  - name: fname
+    prompt: Enter a filename
+    private: no
+  tasks:
+  - name: "file {{fname}} details"
+    stat: path="{{fname}}"
+    register: result
+  - debug: msg="About {{fname}} details:{{result}}"
+    when: result.stat.exists
+  - name: create a new file
+    shell: touch "{{fname}}"
+    when: not result.stat.exists

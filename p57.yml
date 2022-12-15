@@ -1,0 +1,8 @@
+---
+- hosts: webservers
+  tasks:
+  - debug: msg="OK-1"
+  - debug: msg="OK-2"
+    delegate_to: student
+    run_once: true
+  

@@ -1,0 +1,7 @@
+---
+- hosts: localhost
+  tasks:
+  - debug: msg="OK-1"
+    when: true
+  - debug: msg="OK-2"
+    when: not true

@@ -1,0 +1,14 @@
+---
+- hosts: student
+  tasks:
+  - user: name="{{item}}" state=absent
+    loop:
+    - userA
+    - userABC
+    - userB
+    - userC
+    - userD
+    - userAZ
+    - userX
+    - userY
+    - vsk

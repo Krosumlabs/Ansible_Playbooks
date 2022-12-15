@@ -1,0 +1,9 @@
+---
+- hosts: student
+  tasks:
+  - name: task-1
+    command: sleep 120
+    async: 30
+    poll: 0
+  - debug: msg="OK"
+  - debug: msg="OK"

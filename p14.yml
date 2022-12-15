@@ -1,0 +1,13 @@
+---
+- name: demo
+  hosts: webservers
+  vars:
+  - mycmd: uptime   # mycmd is a User defined variable
+  tasks:
+  - name: executing {{mycmd}} command
+    command: "{{mycmd}}"
+    register: result
+  - name: display {{mycmd}} result
+    debug: var=result.stdout
+  - name: display {{mycmd}} status code
+    debug: msg="{{mycmd}} execution status code is:{{result.rc}}"

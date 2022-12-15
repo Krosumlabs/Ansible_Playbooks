@@ -1,0 +1,12 @@
+---
+- name: demo for register variable
+  hosts: student
+  tasks: 
+  - name: Task-1
+    command: uptime
+    register: result
+  - name: Task-2
+    debug: var=result  # var=variable  Vs msg="User defined string"
+  - name: Task-3
+    debug:
+      var: result

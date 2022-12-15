@@ -1,0 +1,7 @@
+---
+- hosts: localhost
+  vars:
+  - mypkg: httpd
+  tasks:
+  - yum: name="{{mypkg}}" state=installed
+  - service: name="{{mypkg}}" state=started

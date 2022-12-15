@@ -1,0 +1,5 @@
+
+Free memory: {{ansible_memfree_mb}}
+----------------------------------------------
+Swap memory: {{ansible_memory_mb["swap"]}}
+----------------------------------------------

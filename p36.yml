@@ -1,0 +1,6 @@
+---
+- hosts: localhost
+  tasks:
+  - debug: var=pkg,version
+  - debug: msg="package name is:{{pkg}} version is:{{version}}"
+  - yum: name="{{pkg}}" state=installed

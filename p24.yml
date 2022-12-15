@@ -1,0 +1,8 @@
+---
+- hosts: webservers 
+  tasks:
+  - name: execute command to count total no.of installed packages
+    shell: rpm -qa|wc -l
+    register: result
+  - debug: msg="Total no.of installed packages:{{result.stdout}}"
+    when: ansible_distribution == "OracleLinux" and ansible_distribution_major_version >6

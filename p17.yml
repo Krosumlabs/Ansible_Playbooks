@@ -1,0 +1,5 @@
+---
+- hosts: webservers
+  tasks:
+  - debug: var=ansible_memory_mb
+  - debug: var=ansible_memory_mb.swap

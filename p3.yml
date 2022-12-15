@@ -1,0 +1,10 @@
+---
+- name: Install zsh package
+  hosts: student
+  tasks:
+  - name: Task-1
+    yum:  name=zsh state=latest
+  - name: Task-2
+    yum:
+      name: ksh
+      state: latest

@@ -1,0 +1,12 @@
+---
+- hosts: student
+  tasks:
+  - name: Install a following packges
+    yum: name="{{item}}" state=installed
+    loop:
+    - zsh
+    - ksh
+    - gcc
+    - python3
+    - createrepo
+    - irb

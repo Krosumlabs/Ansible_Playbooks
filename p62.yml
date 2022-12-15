@@ -1,0 +1,7 @@
+---
+- hosts: webservers
+  vars:
+  - net_info: {TYPE: eth0,onboot: yes,bootproto: dhcp,defroute: yes,DNS1: 123.44.5.23}
+  tasks:
+  - name: create network conf 
+    template: src=file4 dest=/tmp/network.conf

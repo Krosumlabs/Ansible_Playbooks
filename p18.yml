@@ -1,0 +1,10 @@
+---
+- name: display each remotenode os distribution & available interface
+  hosts: webservers
+  tasks:
+  - name: display os distribution
+    debug: msg="{{ansible_distribution}}"
+  - name: version details
+    debug: msg="{{ansible_distribution}} version is:{{ansible_distribution_version}}"
+  - name: Available network interface details
+    debug: msg="{{ansible_interfaces}}"

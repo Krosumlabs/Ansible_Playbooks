@@ -1,0 +1,16 @@
+---
+- hosts: localhost
+  tasks:
+  - command: echo "OK-1"
+    notify: callme1
+  - command: echo "OK-2"
+    notify: callme2
+  - command: echo "OK-3"
+    notify: callme1
+  - command: echo "OK-4"
+    notify: callme2
+  handlers:
+  - name: callme1
+    debug: msg="This is Handler block-1"
+  - name: callme2
+    debug: msg="This is Handler block-2"

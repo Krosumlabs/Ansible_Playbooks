@@ -1,0 +1,16 @@
+---
+- name: debug 
+  hosts: all
+  strategy: debug
+  vars: 
+  - myvar: 100
+  tasks:
+  - name: Task-1
+    debug: msg="OK-1"
+  - name: Task-2
+    command: echo "my var value:{{myvar}}"
+    register: result
+    ignore_errors: true
+  - name: Task-3
+    debug: 
+      msg: "myvar value is:{{result.stdout}}"

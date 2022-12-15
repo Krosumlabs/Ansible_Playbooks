@@ -1,0 +1,8 @@
+---
+- name: variable demo
+  hosts: localhost
+  vars:
+  - myapp: TestApp
+  tasks:
+  - debug: var=myapp
+  - debug: msg="App name is:{{myapp}}"

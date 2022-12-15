@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  tasks:
+  - name: get stat info about /etc/passwd file
+    stat: path="/etc/passwd"
+    register: result
+  - name: display
+    debug: var=result

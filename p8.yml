@@ -1,0 +1,15 @@
+---
+- hosts: student
+  tasks:
+  - command:  df -Th /
+    register: result
+  - debug: var=result.stdout
+  - shell: free -m|awk '{print $2}'
+    register: result
+  - debug: var=result.stdout
+
+
+
+# ---------------------------------------------------
+# - name: <user defined message> - this is optional
+# ---------------------------------------------------

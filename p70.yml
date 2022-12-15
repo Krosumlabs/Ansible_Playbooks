@@ -1,0 +1,39 @@
+---
+- hosts: localhost
+  tasks:
+  - name: Task-1
+    debug: msg="OK-1"
+  - name: Task-2
+    debug: msg="OK-2"
+    tags:
+      - sales
+      - qa
+  - name: Task-3
+    debug: msg="OK-3"
+  - name: Task-4
+    debug: msg="OK-4"
+    tags:
+      - sales
+  - name: Task-5
+    debug: msg="OK-5"
+    tags:
+      - qa
+  - name: Task-6
+    debug: msg="OK-6"
+    tags:
+      - sales
+      - crm
+  - name: Task-7
+    debug: msg="OK-7"
+  - name: Task-8
+    debug: msg="OK-8"
+
+
+# ansible-playbook p70.yml
+# ansible-playbook -t sales,qa p70.yml 
+# ansible-playbook --tags=sales,qa p70.yml 
+#
+# ansible-playbook --skip-tags=sales,qa p70.yml
+#		    -------------------
+#                      |->skip sales,qa tags - run remaining tasks
+# 

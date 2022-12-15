@@ -1,0 +1,13 @@
+---
+- hosts: localhost
+  tasks:
+  - debug: msg="item value is:{{item}}"
+    when: item == "python3" or item == "gcc"
+    loop:
+    - httpd
+    - apache2
+    - iis
+    - python3
+    - irb
+    - gcc
+    - sqlite3

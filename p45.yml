@@ -1,0 +1,9 @@
+---
+- hosts: student
+  tasks:
+  - name: wait until the file is present
+    wait_for: path="/tmp/test.log"
+  - debug:
+      msg: "OK-1"
+  - debug:
+      msg: "OK-2"

@@ -1,0 +1,8 @@
+---
+- hosts: webservers
+  tasks:
+  - debug: msg="OK-1"
+    run_once: true
+  - debug: msg="OK-2"
+  - debug: msg="OK-3"
+  

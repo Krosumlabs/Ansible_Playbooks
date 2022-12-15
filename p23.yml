@@ -1,0 +1,9 @@
+---
+- hosts: localhost
+  tasks:
+  - debug: msg="OK"
+    when: 100<500 or 100 >500
+    #when: 100<500 and 100 >500
+        # -------     ---------
+        
+

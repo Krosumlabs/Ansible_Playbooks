@@ -1,0 +1,10 @@
+---
+- hosts: localhost
+  tasks:
+  - name: iteration
+    debug: msg="{{item}}"
+    with_items:
+    - httpd
+    - irb
+    - python3
+    - gcc 

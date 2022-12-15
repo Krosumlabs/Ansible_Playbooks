@@ -1,0 +1,24 @@
+---
+- hosts: student
+  tasks:
+  - command: iostat
+    register: result1
+    ignore_errors: true
+  - command: uptime
+    register: result2
+    ignore_errors: yes
+  - command: vmstat
+    register: result3
+    ignore_errors: yes
+  - command: mpstat
+    register: result4
+    ignore_errors: true
+  - debug: var=result1.stdout
+    when: result1.rc == 0
+  - debug: var=result2.stdout
+    when: result2.rc == 0
+  - debug: var=result3.stdout
+    when: result3.rc == 0
+  - debug: var=result4.stdout
+    when: result4.rc == 0
+  

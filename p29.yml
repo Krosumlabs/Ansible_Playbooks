@@ -1,0 +1,11 @@
+---
+- hosts: localhost
+  tasks:
+  - name: iteration
+    debug: msg="item value is:{{item}}"
+    loop:
+    - data1
+    - data2
+    - data3
+    - data4
+    - data5

@@ -1,0 +1,9 @@
+---
+- hosts: webservers
+  vars:
+  - myapp: Flask
+  - port: 5000
+  tasks:
+  - name: template code
+    template: src=file1  dest=/tmp/r1
+

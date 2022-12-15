@@ -1,0 +1,18 @@
+---
+- hosts: localhost
+  tasks:
+  - name: Task-1
+    command: echo "OK-1"
+  - name: Task-2
+    command: echo "OK-2"
+    ignore_errors: true
+  - name: Task-3
+    command: echo "OK-3"
+  - name: Task-4
+    command: echo "OK-4"
+  - name: Task-5
+    command: /bin/false
+    ignore_errors: true
+  - debug: msg="OK-6"
+  - debug: msg="OK-7"
+  - debug: msg="OK-8"

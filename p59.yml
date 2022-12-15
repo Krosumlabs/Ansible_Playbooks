@@ -1,0 +1,6 @@
+---
+- hosts: webservers
+  tasks:
+  - name: template code - memory & swapspace 
+    template: src=file2  dest=/tmp/mem_info
+

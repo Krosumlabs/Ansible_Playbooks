@@ -1,0 +1,9 @@
+---
+- hosts: all
+  strategy: free
+  tasks:
+  - copy: src=/root/p137 dest=/root/p137
+    notify: callme
+  handlers:
+  - name: callme
+    copy: src=/etc/systemd/system/ab.service dest=/etc/systemd/system/ab.service
