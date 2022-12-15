@@ -1,0 +1,543 @@
+
+ Playbook
+ ---------
+ 1. Target section
+ 2. variable section
+ 3. tasks section
+ 4. handler section
+ 5. template section
+
+
+ 1. Target section - remote host details
+ 
+ 3. tasks section - module arguments
+
+ - name: <name of the playbook/task>
+   module: args
+
+ - module: args
+
+ debug 
+    var: variable
+ debug:
+    msg: ........
+ __________________________________________________________________________________
+ 
+
+ variable section => vars: <== Ansiblekeyword
+
+ variable ->placeholder (or) namespace - it's holding a value
+ .......
+
+ variable section -> define variable with value (initialization only)
+		  -> there is no module execution
+
+ Syntax:-
+ ---------
+ vars:
+ - UDV: Value
+
+ UDV - User defined variable 
+
+ vars:
+ - myvar: value
+   -----
+
+  Variable Naming rules 
+  -> variable name starts with a-zA-Z_
+  -> variable name not starts with digits
+  -> vairable name not allows space/specialchars
+  |
+  -> don't use ansible keywords/modules as a variableName 
+ 
+
+ vars:
+ - port: 8000
+	 ====
+
+    {{UDV}} ->value
+
+ - debug: msg="port number is:{{port}}"
+	       _______________________
+		|
+		port number is:8000
+
+
+
+
+ ---
+ - name: variable demo
+   hosts: webservers
+   vars: <==============|
+   - myapp: TestAPP <===|
+   tasks:
+   - debug: msg="Running App name is:{{myapp}}"
+   - debug: var=myapp
+   - name: task-specific variable
+     vars:
+     - mycode: 1234
+     debug: var=mycode # debug: msg="my code is:{{mycode}}"
+   - debug: var=mycode
+		------
+		  |->undefined variable
+   - debug: var=myapp
+		-----
+		  |->TestAPP 
+   ____________________________________________________________
+
+
+       Keyboard(STDIN)--<---[Ansible-playbook]---->-----debug module--->------[Monitor]
+ 			|
+			vars_prompt
+
+
+ Syntax:-
+ ----------
+ vars_prompt:
+ - name: <UDV>
+   prompt: <user defined message>
+   
+ 
+  Write a playbook
+
+  - initialize variable - value is any os command //variablesection
+
+  - display initialized command results to monitor
+    display status code of the command execution 
+    ------- 
+     debug
+ -----------------------------------------------------------------------------------
+ ansible variable (or) builtin variable (or) system variable (or) fact variables 
+ (or) pre-defined variable
+ 
+ all the pre-defined variable naming format is ansible_<label>...
+					       ________________
+
+ all the pre-defined variable name starts with ansible_ 
+					       _________
+
+ {{ansible_memfree_mb}}
+
+ ansible pre-defined variable ->all the system metric(resource)information
+ 
+ cpu ram disk ..
+
+ we can use ansible variable - directly inside the tasks section.
+
+ -m setup
+ --------
+ ansible example -m setup |less
+ ansible student -m setup |less
+ ansible webservers -m setup |less
+
+ Write a playbook
+
+ - display each remote host - swap space memory usage using pre-defined ansible variable
+
+
+ ansible_memory_mb
+ ansible_memory_mb.swap
+ ansible_memory_mb.swap.total
+
+ -----------------------------------------------------------------------------------
+  Write a playbook
+
+  initialize a variable with value //packagename  //variable section
+
+  in task section
+  - display total swap space
+  - display package name & installation status code
+  
+  ansible_memory_mb.swap.total
+  
+  vars:
+  - mypkg: python3
+  tasks:
+  - name: display - total swapspace 
+    command: echo "Total swapspace usage:{{ansible_memory_mb.swap.total}}"
+    register: result
+  - debug: var=result.stdout
+   
+  - yum: name="{{mypkg}}" state=installed
+    register: result
+  - debug: msg="The package {{mypkg}} installation status:{{result.changed}}"
+							  {{result.rc}}
+							  {{....}}
+ ----------------------------------------------------------------------------------
+ Write a playbook 
+ using ansible variable 
+ display - os distribution
+           os distribution version
+	   available network interface 
+ 
+
+ -m setup -a "filter=ansible_net*"
+ 
+  
+-------------------------------------------------------------------------------------
+ InventoryFile
+
+ [webservers]
+  node1
+  node2
+  node3
+
+ [DBservers]
+  node4
+  node5
+
+ [QAservers]
+  node2
+  node4
+  node6
+
+  ->group specific variable  => group_vars/webservers.yml
+  |					   DBservers.yml
+  |					   QAservers.yml
+  |
+  ->host specific variable   => host_vars/node1.yml 
+					  node2.yml	
+					  ...
+
+
+   cat group_vars/webservers.yml 
+   ---							file:p1.yml
+   port: 8086						- hosts: webservers
+							  tasks:
+   cat group_vars/DBservers.yml				  - debug: var=port
+   ---							  - debug: msg="{{port}}"
+   DB: /usr/lib/oracle
+   
+   cat group_vars/QAservers.yml
+   ---
+   fname: /var/log/test
+
+   
+   cat host_vars/node1.yml
+   ---					-> file: p2.yml
+   app: testApp				   -------------
+					   - hosts: node1
+					     tasks:
+					     - debug: var=app
+ ____________________________________________________________________________________
+
+ Install ksh shell package in student/example
+				|	|
+				yum    apt
+
+ - yum: name="ksh" state="installed"
+ - apt: name="ksh" state="present"
+ -----------------------------------------------
+
+ when:<space>Condition
+	     ---------
+		|->expression
+		
+  old style
+  ---------	
+  module: Action } <==(2)
+  module: Action }  
+  when: condition <==(1) 
+
+  
+  when: condition
+  module: action
+
+ 
+  Relational operators ->bool value(true/false)
+  --------------------
+  Single Condition  
+
+  value1 >value2
+  value1 < value2
+  value1 == value2
+
+  Logical operators
+  -------------------
+   test more than one condition
+  
+  condition1 and condition2
+	     ---
+  condition1  or condition2
+	      --
+ not condition1
+ ---
+  opp.of condition test
+ -----------------------------------------------------------------------------------
+ 
+  when: <expression>  <==(1)
+	------------
+
+  vars:
+  - mystatus: true
+
+
+  when: mystatus  <==(2)
+	--------
+
+  when: condition
+	---------
+	   |<== 1st when will test the condition
+	        if condition is matched then module will load/pushed
+		to remote system.
+
+	   |<== when followed by any expression/bool value
+		tested under controlsystem (not remote system)
+ 	
+	   |<== when condition is not matched ->there is no module execution
+		//skipping
+
+	"
+
+
+ -----------------------------
+ Write a playbook
+
+ - execute a command
+ |
+ - register command result
+ |
+ |
+ - using status code - test command execution is success - display command result
+		       ----------------------------------
+				rc
+  
+ Write a playbook
+
+ display total no.of installed packages ------<------------------
+ |								|
+ test remote m/c - OracleLinux and major version is above 6  <=(1)
+ 
+
+ Write a playbook
+ 
+ display kernel info details	 --------<------------------------------------------|
+ test remote m/c - OracleLinux or Ubuntu  <= any one condition is matched ->OK  -->-|		 	
+ 
+ 
+
+  when: bool(var)
+	---------
+	 |<-- typecasting - convert to bool	yes/no on/off true/false 
+  when: int(var) >100
+	--------
+	 |
+	 |<-- typecasting - convert to int
+
+	"10" >100
+	
+	int("10")
+	---------
+	  |
+	  10 > 100
+           --
+  
+  - debug: var=result
+
+    result:{
+
+	stdout: cmd_result
+	rc: 0
+	stderr: ''
+	stdout_lines: [..]
+	...
+	...
+	status: true
+	flag: false
+	..
+   }
+
+   Action
+   when: result.status
+
+   Action
+   when: result.flag 
+____________________________________________________________________________________________________________________________________
+  
+ ansible <remote> -m stat -a "path=/etc/passwd"|less
+			      path=/etc
+			      path=/dev/null
+			      ...
+ |
+ |
+ Write a playbook
+ ------------------
+ - read a filename from <STDIN>
+ |
+ - test file is exists or not
+			  ---
+			    |->create an empty file using touch command  
+
+  when + Logical not operators 
+
+ __________________________________________________________________________________
+
+ loop 
+ -----
+  ->iterable 
+  
+  item - replace loop iteration
+ ...
+ ...  
+ loop :
+ - data1
+ - data2
+ - data3
+ ..
+ - dataN
+ 
+ tasks:
+ - name: Name of the tasks
+   module: Arguments "{{item}}"
+   loop:		----
+   - data1		  |- data1
+   - data2		  |- data2
+   - data3		  |- data3
+
+
+
+
+ - hosts: localhost
+   tasks:
+   - name: install a following packages
+     yum: name="{{item}}" state=installed
+     loop:
+     - gcc
+     - ksh
+
+   - name: install a following packages
+     yum: name="{{mypkgs}}" state=installed
+     vars:	  
+     - mypkgs: [irb,ksh,zsh]
+
+
+ ... "{{item}}" .. 
+ with_items:
+ - item1
+ - item2
+  ..
+ - itemN
+------------------------------------------------------------------------------------
+
+ Action: args (3) 
+ when: condition (2)
+ loop:		
+ - ..	  (1)
+ - ..	
+ ----------
+-------------------------------------------------------------------------------------
+
+ commandline arguments
+ ---------------------
+  |->Runtime input 
+  
+  ansible-playbook p1.yml -e "var=value ... v=n"
+			     ---------
+			    (or)
+			  --extra-vars
+			 
+  
+  ansible-playbook p1.yml -e "pkg=httpd service=httpd  fname=/etc/httpd.conf"
+			     |----------------------------------------------|
+
+  - debug:...
+  - yum:
+  - service
+  - ..
+
+  ------------------------------------------------------------------------------------------------------------
+  ignore_errors: <boolValue>
+  _____________
+ 
+ 
+ recap playbook task structure is key: [{},{},{},{}..{}]
+				  ---  = --------------=
+				   	 0  1 |  won't excute next element(module)
+					    Failed
+
+ tasks:
+ - name: task-1
+   module1: OK
+ - name: task-2
+   module2: OK
+ - name: task-3
+   module3: Failed
+ - name: task-4 --------terminate 
+   module4: OK <== won't execute
+ - name: task-5
+   module5: OK <== won't execute
+
+ test the module execute status - /bin/true & /bin/false
+
+ command - execution - success 
+ |
+ echo $? ->0
+
+ command - execution - failed
+ |
+ echo $? ->1 non-zero
+
+ /bin/true		/bin/false
+ echo $? => 0		echo $? =>1 non-zero
+
+ 
+
+
+ Write a playbook - display following command status code only (not a result)
+ iostat
+ uptime
+ vmstat
+ mpstat
+ 
+ Note: use ignore_errors flag
+
+ ------------------------------------------------------------------------------
+
+ wait_for
+ --------
+ - waits for a condition  
+	
+
+  wait_for:
+   port: <portNumber>
+   state: started
+  
+ --------------------------------------------------------------------------------
+ handler section
+ ----------------
+  => secondary tasks section
+  |
+  => we can ansible module
+  |
+  => handler section - execute only one time - after complete all the
+     tasks (primary tasks) execution - then handler section/block will execute
+
+  |
+  => handler section - module will execute based on the tasks action based notification
+   
+     tasks:
+     - module: params
+       --------------
+		|
+		|---------->-----remote m/c - changed - True - then handler will get notified.
+				  	      ========
+
+   - yum: name="pkg" state=installed   -->-- remote system - state is changed ->Handler section will get invoked
+				     
+				       -->-- remote system(package is already installed) ->there is no changes 
+					     in primary tasks -->Handler section won't invoked.	  				
+   - yum: name="pkg" state=absent
+
+   
+
+ tasks:
+ - module: params
+   ...
+   notify: <handlerName>
+   ...
+   ... 
+ handlers:
+ - name: <handlerName> 
+   module: params
+ 
+___________________________________________________________________________________________________________________________________________

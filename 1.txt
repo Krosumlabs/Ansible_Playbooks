@@ -1,0 +1,1129 @@
+In Linux (RHL) -> yum install httpd	 
+		  ---	      ------
+In Linux(Ubuntu)  -> apt-get install apache2
+		     -------	     --------
+
+-------------
+in Ansible ad-hoc -> ansible <hostdetails> -m yum -a "name=httpd state=installed"
+		     ansible <hostdetails> -m apt -a "name=apache2 state=present"
+ 
+ |
+ |
+ in ansible playbook (p.yml)
+ -----------------------------
+ ---
+ - hosts: <hostdetails>
+   vars:
+	 mp1: httpd
+	 mp2: apache2
+   
+  tasks:
+  - yum: 
+     name: "{{mp1}}" 
+     state: installed
+  - apt: 
+     name: "{{mp2}}"
+     state: present
+ -------------------------
+ |
+ Roles 
+ -----
+ project/dev/vars/main.yml
+	    /tasks/main.yml
+	    ...
+
+ - roles: ...
+ ------------
+____________________________________________________________________________________
+ 
+ Linux - Kernel - Core Part of OS
+			       --
+ OS - System software(program) - its interface between User & H/W
+ --
+	
+  +-----------------------------+
+  | User Layer: Appln	        |
+  |				|
+  +--------//shell--------------+
+  | 				|
+  |  OS(Kernel)			|
+  +-----------------------------+
+  |  H/W 			|
+  +-----------------------------+
+	   
+ 
+  Kernel - File,Process
+  ------
+ 
+  File - Data under the storage device
+  process - Data under the CPU
+
+
+  root@host~]# date<==(File,Process)
+			|
+			/bin/date <== ELF,rwx,root,size,index etc.,
+			     ...
+			       |->process(PID,PPID,PAdd,Pstate....)
+
+  root@host~]# ansible-playbook p1.yml <==(File,Process)
+
+			process(ps)
+			----------
+			   |
+	---------------------------------------
+	|				       |
+	User				     System
+	-by user			     - by systemD (or) init
+	- TTY:pts/<port>		     - TTY:?
+	-				     - Start->R+ 
+					     - Session Leader(SID) 
+						
+    p1 p2 p3 p4  p5  p6  p7  p8  p9  p10
+    |  |  |  |   |    |  |   |   |   |
+  101 102 103104 105 106 107 108 109 110 <== PIDs
+
+    p1 p2 p3    p4 p5    p6 p7     p8p9p10
+    ---------   ------   -----     --------
+    PGID:101    PGID:104 PGID:106  PGID:108
+ 
+    p1 p4 p6 p8
+   --------------
+    SID:101
+	
+	PID	PGID	SID
+	101	101	101
+	104	104	101
+	107	106	101						
+
+
+   - Login:____  (getty-?)
+     passwd:___
+	|
+	shell
+	|
+    User I/O (userprocess)
+
+  root@host~]# date
+  
+  root@host~]# python p1.py
+		
+  root@host~]# ansible-playbook p1.yml
+  
+  ___________________________________________________________________________
+   in putty terminal
+
+ Login as:root		Login as:student
+ passwd: 		passwd:
+	   |			 |
+	/etc/profile - read and execute this script
+	   |
+ root@host~]#		student@host~]$  
+___________________________________________________________________________________
+ Linux File structure
+ ---------------------
+		directory structure 
+			/
+			|
+	-------------------------------------
+	|	|	|	|	..   |
+	/bin   /etc	/usr	/mnt	    /proc <= sub-directories 
+
+	
+ /bin/ <== internal bin files
+ /usr/bin/ <== installed bin files
+ /sbin/ <== root user only can access this bin files
+
+ which <command>
+ ----  
+
+ which date -> /bin/date
+
+ which python3 -> /usr/bin/python3
+
+ which ifconfig -> /sbin/ifconfig
+
+   
+ /etc - Configuration directory
+ 
+ /dev - device files
+ /proc - virtual file - current state of kernel details
+ -----
+
+ /etc/file  Vs	/proc/file
+		      .....
+		 (or)
+		sysctl -w Kernel.parms=UpdatedValue
+
+	
+   [DB]->R+		echo "3242342323" > /proc/sys/kernel/shm...
+  _________		|(or)
+   Linux		sysctl -w kernel.shmall=3242342323
+  _________
+ 
+
+ /etc/sysctl.conf 
+ ...
+ ...
+ /mnt/
+ /media/
+ /run/
+ ---------//to mount external devices
+
+ pwd
+ cd <dir>
+ cd ..
+ mkdir -p d1/d2/d3/d4
+ ls -R d1
+    --
+ ----------------------------------------------------------------------------------
+ 
+ command 
+ command -option
+ command -option <arg1> <arg2>
+ |
+ command `Another_command` <== backquote
+
+
+ root@host~]# uname <== commandonly
+ Linux
+
+ root@host~]# echo "My working kernel name is:uname" <== command with args
+ My working kernel name is:uname
+
+ root@host~]# echo "My working kernel name is:`uname`"			
+ My working kernel name is:Linux	       ------
+ 						 ^
+						 |<-- command with command
+
+  command `command` (or) command $(command)
+	  |-------|		 --       --
+
+  ps
+  ps -e (or) ps -A
+  ps -f
+  ps -l
+  ps -elf
+  
+  top 
+   P ->%CPU
+   M ->%MEM
+   b ->Highligh Running process
+   q ->quit
+
+  command &  - transfer to background
+  
+ [eventID] <PID>
+
+  jobs {enter}
+  ----
+ [eventID] jobName {Running|stopped} ...
+
+   
+ ctrl+c - exit signal - exit from Process Ctrl Block(PCB) 
+ |
+ ctrl+z - stop signal -->jobs ... fg %<eventID> ->R+
+ 
+ kill -9 <PID>
+      -- 
+      |
+    SIGKILL
+ ------------------------------------------------------------------------------
+ systemctl {enter}
+ |
+ systemctl -t service{Enter}	sshd  sshd.service <== systemprocess
+  				atd   atd.service <== systemprocess
+ 
+ root@host~]# mysql -u root -p ..{Enter} //userprocess
+ mysql>	     ___________________________
+ mysql>  						
+			|___ mysqld.service (R+)
+
+  root 
+  ----
+   |->systemctl start sshd.service
+   |->systemctl stop sshd.service
+   |->systemctl restart sshd.service (if do any changes in ssh config file)
+
+   |->systemctl status sshd.service<==(root,non-root)
+
+  systemctl is-active  sshd.serivce
+	    ---------
+ ----------------------------------------------------------------------------- 
+ create a new file -> vi file{enter}
+ date
+ sleep 5
+ ps 
+ sleep 3
+ date
+ sleep 60
+ :wq
+ 
+ ls -l file{Enter}
+ -rw-r--r-- ..
+
+ chmod a+x file
+
+ ls -l file 
+ -rwx-r-xr-x .. file
+ 
+ ./file
+  
+ pwd{enter}
+ /root		->/root/file
+ 		  -----------
+ Run a file in background
+ |
+ ps
+ jobs 
+ top - monitor Running(R) state
+ |
+ kill -9 <PID>
+ 
+ ----------------------------------------------------------------------------------
+ Package Management 
+ -------------------
+  ->install,uninstall,update,query etc.,
+ 
+ 1. rpm -> packagename-version-release.arch.rpm	
+	   ______________________________________
+		rpm -ivh  packagename-version-release.arch.rpm
+			  ------------------------------------
+				
+
+		pA ->pB ->pC ->pD
+		....	
+		
+		 
+ 2. yum	  => yum install packagename{enter}
+
+            yum install pA{enter}
+			--
+		..pB
+		..pC
+		..pD
+		------
+		y/n/d :
+		
+ 
+  yum install <package>{enter}
+   |
+   |-->/etc/yum.repo.d/public-yum-ol7.repo
+		       ---------------------
+			[repoID]
+			name=name of the repostitory
+			base_URL='https://yum.oracle.com/....'
+			enabled=1
+			gpgkey=file:///
+			gpgenabled=1
+			...
+			...
+			Key=Value
+			[   ]
+			..
+			------------------------
+  yum repolist 
+  	
+
+ in rpm => rpm -evh packageName  (ex: rpm -evh zsh)
+ |
+ in yum => yum remove packagename (ex: yum remove zsh)
+	       ------			
+
+ In Debian
+ ----------
+ |-> apt-get install <Pacakge>
+     .......
+	|
+	command
+
+ .rpm	.deb
+	.deb
+
+
+ |-> apt-get install <packagename>
+     apt-get remove <packagename>
+     apt-get update <packageName>
+     ...
+     ...
+
+  OL[567]    RHL[567]    Ubunut[16/18/19/2.x] 
+  _________ _________    ____________________  
+  [ansible] [ansible]     [ansible] 
+	
+  /etc/apt/sources.list 
+
+  apt-get upgrade 
+  
+
+  Ubuntu 20.x => apt 
+  apt list 
+--------------------------------------------------------------------
+ Linux (Kernel) ->GNULinux (Kernel)
+			    +
+			   dist(RHL,Ubuntu,...)
+
+ Kernel + Utilites = OS
+	  ........
+ -------
+ 
+ Ubuntu 
+ RedHat
+ Linuxmint
+ Fedora
+ Centos
+ OracleLinux
+ -------------------//uname uname -r
+
+ 
+ Kernel module(Kernel object file - file.ko)
+				    --------
+
+ ->load a kernel module => modprobe <modulename>
+
+			modprobe nfs
+
+ ->unload a kernel module =>modprobe -r <moduleName>
+
+			modprobe -r nfs
+
+ ->to get module info => modinfo <moduleName>
+			 ---------------------
+
+ ->list of all the loaded kernel module => lsmod
+ ___________________________________________________________________________
+ 
+ To view file content/command result 
+ -----------------------------------
+
+ command |more
+
+ q ->quit
+
+ command |less <==page by page (pageUp pageDown Home End)
+ q ->quit
+
+ command|head <== from top to bottom - 1st 10 lines
+
+ command|tail <== from bottom to top - last 10lines
+
+
+ command|head -n N
+ command|tail -n N
+ ________________________________________________________________________
+
+
+	  UserLevel
+ 	--------------------------------------------
+		systemCall
+		|
+	   FileSystem <--->PCB| IPC;SCHED;Net;MM |
+		|
+	    DeviceDriver <==file.ko
+		|
+	    Device Controller(asm)
+		|
+	--------------------------------------------
+	    H/W: CPU RAM HD I/O NIC  (10101)
+
+ modinfo -n
+ 
+ modprobe <module> 	# load a kernel module
+ modprobe -r <module>   # unload a kernel module
+ modinfo <module> 	# module information details
+ modinfo -n <module>    # absolute module name file path
+ lsmod 			# loaded kernel module
+ ---------------------------------------------------------------------------
+ File directory structure  	/	/proc	/mnt ..
+				
+ Filesystem - kernel datastructure //written in C
+ ...........
+	|->Knows where the data is placed - information - metadata
+		 --------------
+		   |->which specific h/w
+
+ cp /usb/file1 ~/file2	<== OK
+ -- ---------- ---------
+ |
+ read() write()
+ |
+ ..
+ |
+ filesystem - /usb/ ->fstype (ex:iso9660)  ~/ ->fstype xfs/ext4
+				  -----			----
+ |
+ device drivers
+ |
+ DC
+ |
+ H/W
+			
+
+ example
+ ----------
+ /dev/xvdb(Disk) ->using partition tools - create a partition
+		   fdisk,parted,cfdisk	   -------------------
+			 		
+	fdisk /dev/xvdb{enter}
+
+ 	fdisk> n p w ...
+
+	/dev/xvdb1
+	/dev/xvdb2
+	/dev/xvdb3
+	/dev/xvdb4
+		create a filesystem => mkfs.xfs /dev/xvdb1
+				       mkfs.ext4 /dev/xvdb2
+				       mkfs.xfs  /dev/xvdb3
+				       mkfs.xfs  /dev/xvdb4
+
+		mkdir /D1 /D2 /D3 /D4
+
+		mount <partition> <mountpointDirectory>
+
+		mount /dev/xvdb1	/D1 
+
+  cd /D1
+  vi p1.java 
+  vi p1.yml
+  ..
+  ..
+  ...
+ 		
+  df  <== mounted filesystem details
+  df -Th
+      |__filesystemType
+
+ Available filesystem details -  cat /proc/filesystem {enter}
+ _________________________________________________________________________________
+ free 
+ free -m
+ free -g
+ _________________________________________________________________________________
+ Tasks
+ ------
+ Q1. Display Kernel name & version 
+   # uname 	
+   # uname -r
+
+   # uname -sr
+
+ Q2. display hostname,login name & login ID
+
+    # hostname (or) uname -n
+    # whoami (or) id -un 
+    # id -u 
+
+ Q3. Display Total no.of process count
+	# ps -e|wc -l 
+
+ Q4. Display last 15 process details
+
+	# ps -e|tail -n 15
+
+ Q5. display current process name and startup time
+
+	# ps -f
+
+ Q6. How to transfer process to background? & How to transfer to foreground?
+	
+	# command &
+	# jobs
+	# fg %<eventID>
+
+ Q7. print top 10 loaded kernel modules
+
+	# lsmod|head
+
+ Q8. display mounted filesystem & Types 
+	# df -T 
+ 
+ Q9. Count total no.of filesystem from /proc/filesystem
+
+	# cat /proc/filesystems|wc -l  (or) wc -l /proc/filesysems
+ 
+ Q10. How to check package ksh is exists or not
+				   |	     |->how to install?
+				   |
+				How to get package information details
+ 
+
+	# rpm -q ksh 	Vs	rpm -q ksh ->ksh is not installed
+	# rpm -qi ksh		yum install ksh
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+ Redirection (or) redirect command result to file
+ -----------	  ===============================
+			|->extended to storage device
+
+ command ->o/p ->1.STDOUT (Success)
+	   ---
+	     |-->2.STDERR (Failed)	
+
+  root@host~]# uname{enter}
+  Linux <== STDOUT
+
+  root@host~]# unamee{enter}
+  unamee command not found <== STDERR 
+ 
+
+ command >resultfile
+	 |
+	create a newfile & write data to file,if result file is already exists
+	all the existing file contents are erased (overwrite).
+	
+	so resultfile must be newfile. <==
+
+
+ command >>resultfile
+	 --
+	  |<-- append operation - won't overwrite existing file content
+ 
+
+ Filedescriptor (FD) - int(number)
+
+ STDIN(FD=0) ; STDOUT(FD=1) ; STDERR(FD=2) 
+	       ---------------------------
+	command fd>resultfile
+		
+	command >resultfile  == command 1>resultfile
+		|
+		default FD is 1 <== STDOUT
+
+ uname >r1.log same as uname 1>r1.log
+ date >d1.txt  same as date 1>d1.txt
+  
+ unamee >err.log -- unameee 1>err.log
+			    |
+			mismatching fd value
+ unamee 2>err.log
+    	
+ command >r1.log 2>err.log 
+ |
+ redirect command success/failure message to common log file
+					     -----------
+	command >resultfile 2>&1
+ ------
+ run a command ->o/p - don't want display to monitor
+		 ---
+		  |->don't want to extend to file
+  
+ /dev/null - specialfile - clenup 
+
+ ps -e>>p1.log
+ lsmod >>p1.log
+ df >>p1.log
+ 
+ ls -lh p1.log (or) wc -l p1.log
+ 			
+ -> To clean all the data from p1.log - make file size is empty(0)
+  
+   cp /dev/null p1.log 
+      --------- ======
+  ls -l p1.log  (or) wc -l p1.log
+
+ 
+ run a command ->o/p - don't want display to monitor
+		 ---
+		  |->don't want to extend to file
+  
+ command >/dev/null 2>&1
+	  ..........
+  	  ..........
+
+ ______________________________________________________________________________
+ To get last command operation exit status 
+ use special shell variable $?
+
+ echo $? ->status code
+	   -----------
+	   number(int)
+ 
+ $? ->0 (Success)
+
+ $? ->non-zero (failed)
+ 
+ ping 10.20.30.40 >/dev/null 2>&1
+ echo $? 
+ 0 <== 
+ ________________________________________________________________________________
+ Linux filters
+ ---------------
+ grep - search a pattern from <input>
+				|->file (or) pipe content
+ 
+ sed - search+substitute
+ |
+ awk - search+formatting
+	      ----------
+		
+ grep 
+ ----
+ grep -option pattern inputfile  (or) command|grep -option pattern
+ 
+ => search only
+
+ pattern: text(or) string
+ |
+ action : print(or) display 
+ ..............................
+
+ grep bash /etc/passwd
+
+ grep -n bash /etc/passwd
+      ---
+	|->matched pattern line numbers
+ 
+ -n - matched pattern line numbers
+ 
+ -i - ignore pattern case 
+ 
+ -c - count - matched pattern count
+ 
+ -v - inverse matching (not matching given pattern)
+
+ -l - matched pattern file name only
+ 
+ ex: grep -l sales *
+ emp.csv
+ e1.csv	
+
+ -e - extended (or) multipattern 
+ 
+ grep -e pattern1 -e pattern2 -e pattern3 .. -e patterN input
+ (or)
+ egrep 'pattern1|pattern2|pattern3' inputfile 
+ (or)
+ grep -E 'pattern1|pattern2|pattern3' inputfile
+ 
+ -w - word based 
+ 
+ -o - matched pattern output only 
+
+ ------------------------------------------------------------------------------
+ Tasks
+ ------
+ Q1. How to find nfs module is loaded or not - display status 
+ 
+  # lsmod|grep nfs 
+  # echo $?
+
+
+ Q2. How to find xfs filesystem is mounted or not - display status code
+
+  # df -T|grep xfs 
+  # echo $?
+
+ Q3. test createrepo  is installed or not?
+	  -----------
+
+   # rpm -qa|grep -i createrepo
+   #
+   # echo $?
+
+
+ Q4. display total no.of bash process ? 
+
+   # ps -e|grep -c bash (or) ps -e|grep bash|wc -l
+
+
+ Q5. Type ps -f command in commandline
+     display bash process parent ID (or) what is the name bash process parent?
+
+  # ps -ef|grep <PPID>
+
+ 
+ Q6. How search swap space usage from /proc/meminfo ?
+
+  # cat /proc/meminfo |grep -i swap
+
+ Q7. type lsblk command in commandline - display xfs and ext4 filesystem
+
+ #  lsblk -f|grep -e ext4 -e xfs
+ ------------------------------------------------------------------------------
+  sed 
+  ===
+  sed -option 'patternAction' inputfile
+      	       +++++++======
+		|
+		|
+		|->1.LineNumber 	 N
+		|
+		|->2.Text (or) string	/pattern/
+ 
+   Action(command)
+   ------------------
+    print(p)   substitute(s)  insert(i) execute(e)
+    write(w)   delete(d)      append(a)
+
+   # print delete substitute
+   #  p     d      s
+
+ sed operation
+ ---------------
+ read -	 read the data from <INPUT-file (or) PIPE> line by line
+ stores - stores all the input data to buffer(pattern buffer)
+ |
+ execute - execute sed command - on the bufferspace
+ |
+ display - display sed action(command) to monitor //then buffer will be empty
+ 
+ 
+ print(p)
+ -------
+ -n option is required
+ ==
+
+ print 3rd line content from IP.txt file 
+ (p)   -
+ sed -n '3p' IP.txt 
+     --- 
+ 
+ print 3rd line to 8th line from IP.txt file
+       ---------------------
+
+ sed -n '3,8p' IP.txt
+	 ----
+
+ 3 ..........
+ 4 ..........
+ 5 ..........
+ 6 ..........
+ 7 ..........
+ 8 ..........
+ 
+ print 3rd line and 8th line from  IP.txt file
+       ---------    ---------
+ sed -n -e '3p' -e '8p' IP.txt
+	________________
+ 3 ........
+ 8 ........
+
+ -> print(p) opp.action is delete(d) action
+
+	print 3rd line content from IP 
+	
+ 	sed -n '3p' IP
+ 
+ IP			buffer			monitor
+ ---			-------			--------
+ data1			data1
+ data2			data2
+ data3			data3			data3
+ data4			data4
+ data5			data5
+ ---			---			------
+
+ 
+	delete 3rd line content from IP 
+	
+ 	sed  '3d' IP
+ 
+ IP			buffer			monitor
+ ---			-------			--------
+ data1			data1			data1
+ data2			data2			data2
+ data3								
+ data4			data4			data4
+ data5			data5			data5
+ ---			---			------
+
+ In sed command last linenumber is $
+
+ print last line number content -> sed -n '$p' inputfile
+ .....
+ delete last line number content -> sed '$d' inputfile
+ ......
+ 
+ _______________________________________________________________________________
+ text pattern
+ -------------
+ sed -option '/pattern/Action' inputfile
+ --- =======
+			
+ print 3rd line content => sed -n '3p' inputfile
+ --p-- -   
+ 
+ print sales keyword from emp.csv =>  sed -n '/sales/p' emp.csv - same as grep sales emp.csv
+					      ------
+
+ in sed ->  sed -n '3p' inputfile	- print 3rdline content
+	    sed -n '/3/p' inputfile	- print matched pattern 3 <== 3 is a text
+ 
+ delete a sales work from emp.csv
+ ------
+ sed '/sales/d' emp.csv 
+
+ substitute(s)
+ -------------
+ sed 's/oldpattern/replace/' inputfile 
+
+ sed 's/sales/QA/' emp.csv
+      |
+     search the oldpattern from inputfile - if oldpattern is matched ->replace action
+					  - if oldpattern is not matched - there is no replacement
+
+ 
+ echo "101,raj,sales,pune"|sed 's/sales/prod/'
+
+ 101,raj,prod,pune
+
+ echo "101,raj,sales,pune"|sed 's/sales//' <== deleting sales word from inputString
+ 101,raj,,pune
+	--
+ 
+ echo "101,raj,sales,pune"|sed 's/sales,//' <== deleting sales, word from inputString
+ 101,raj,pune
+ 
+ ------------------------------------------------------------------------------------------------------------------
+ 
+ /pattern/p
+ /pattern/d
+ s/old/replace/
+ ----------------------------------------------------------------------------------
+ grep -option pattern inputfile
+ 
+ pattern: text(or) string
+ action : print
+
+
+ sed -option 'patternAction' inputfile
+ pattern: LineNumber 
+	  /text/ (or) /string/
+
+ action : print delete substitute write i....
+
+ awk -option '/pattern/{Action}' inputfile
+ 
+ pattern: /text/ (or) /string/
+ action: print - print command
+
+ grep		Vs	awk		vs	sed
+ ----			---			----
+ search only		search+format		linefilter+delete,substitute ...
+
+ 
+ awk -option '/pattern/{Action}' inputfile
+ 
+ pattern: /text/ (or) /string/
+ action: print - print command
+ 
+ step 1: read a input line from <FILE> (or) PIPE  -line by line //recordbuffer
+ |
+ step 2: split each line into multiple columns(fields) //based on delimiter
+							 -F<sep>
+ |
+ step 3: search a pattern
+ |
+ step 4: print matched pattern results
+
+ IP
+ ---
+ 101,raj,sales,pune,1000
+ 102,leo,qa,bglore,2000
+ 103,bibu,sales,noida,3000
+
+ awk -F, '/sales/{print}' IP
+
+ step 1:
+
+ 1 101,raj,sales,pune,1000
+ -----------------------------
+ 2 102,leo,qa,bglore,2000
+ -----------------------------
+ 3 103,bibu,sales,noida,3000
+ -----------------------------
+
+ step 2:  -F,
+ 
+ NR $1  $2    $3    $4     $5(or)$NF 
+ 1 101|raj |sales |pune  |1000 
+ -----|----|------|----- |------
+ 2 102|leo |qa    |bglore|2000
+ -----|----|------|------|-----
+ 3 103|bibu|sales |noida |3000
+ -----|----|------|------|------
+   |<========= $0 ===========>|
+
+ awk variables
+
+ awk -F, '/sales/{print NR,$1,$2,$NF}' IP
+
+ 1 101 raj  1000
+ 3 103 bibu 3000 
+   ----------------- default OFS also space
+
+ 
+ awk -F, '/sales/{OFS=":";print NR,$1,$2,$NF}' IP
+
+ 1:101:raj:1000
+ 3:103:bibu:3000
+
+ awk -F, '/sales/{OFS="-";print NR,$1,$2,$NF}' IP
+
+ 1-101-raj-1000
+ 3-103-bibu-3000
+ 
+ awk -F, '/sales/{OFS="\t";print NR,$1,$2,$NF}' IP
+
+ 1  101  raj   1000
+ 3  103  bibu  3000
+ 
+ IP
+ --- 
+101 raj sales
+102 leo prod
+
+ awk  '{print $2}' IP
+ raj
+ leo
+
+ awk '{print $2,$3}' IP
+ raj sales
+ leo prod
+-----------------------------------------------------------------------------
+ Task
+ ----
+ display 1st 5line contents from /etc/passwd  - filter daemon - 1st column & last columns
+ # cat /etc/passwd|head -n 5|awk '{OFS="\t\t";print $1,$NF}'
+
+ # cat /etc/passwd|sed -n '1,5p' |awk '{OFS="\t\t";print $1,$NF}'
+
+ display top 10 lines from loaded kernel modules - display moduleName & Size
+ # lsmod|head|awk '{OFS="\t\t";print $1,$2}' 
+
+ display mounted filesystem(partition) and mount point directory
+ # df -Th|awk '{OFS="\t";print $1,$NF}'
+
+
+ display list of conf files /etc directory - fileName,fileSize,userName
+ # ls /etc/*.conf			     
+  
+-----------------------------------------------------------------------------------------------------------------
+ User Management 
+ ----------------
+ add a newuser ; group
+ modify existing user attributes ;group
+ delete existing user ;group
+
+ useradd <username>
+ passwd <username>
+
+ usermod -option ... <username>
+
+ userdel  <username>
+
+ /etc/passwd - username,userID,login dir,login shell,etc.,
+ ...........
+ /etc/shadow - password aging info
+ ...........
+ /etc/login.defs - default user creation policy 
+ ................
+
+ useradd userA 
+ cat /etc/passwd|grep userA
+ ..
+ cat /etc/shadow|grep userA
+ ... !! ...
+
+ chage -l <userName>		
+ 
+ ----------------------------------------------------------------------------------
+
+ 1. /etc/sysconfig/network-scripts/ifcfg-<interfaceName>
+				   _____________________
+					Key=Value - network property details
+ 
+ 2. /etc/hosts - map IPAddress<--->FQDN<-->Alias 
+		     ---------     -----   ------
+		     10.20.30.40   host01.example.com   host01
+		     10.30.42.23   host02.example.com   host02
+
+ 
+ root@host01~]# ping 10.30.42.23 {Enter}		
+	 (or)
+
+ root@host01~]# ping host02.example.com {Enter}	
+	 (or)
+ root@host01~]# ping host02 {Enter}
+ ..
+ ..
+ ..
+ 
+ 
+ 3. /etc/resolv.conf 
+   - nameserver details
+
+ systemctl restart network
+  -----------------------------------------------------------------
+ GUI ->NetworkManager ->edit ... //restart is not required 
+ ---
+ ------------------------------------------------------------------
+ nmcli <== commandline tool
+ -----
+    |->objects 
+	   |->each object having own attributes
+			  ......................
+				|->commands
+
+ nmcli
+	- object1
+		|->command1 command2 .. commandN
+	- object2
+		|->command1 command2 ..
+	  ..
+	- objectN
+		|->command1 command2 ..
+ nmcli --help
+  //get list of objects
+
+ nmcli general --help
+  //general object description & commands
+
+ nmcli general status --help
+	//status command description + options
+
+ nmcli connection --help
+	...
+ ---------------------------------------------------------------------------------	
+ 
+  [Linux-likeOS]		[node1] [node2]...[nodeN]
+					
+
+	
+  [Linux-likeOS] ------->--------[ Node1 ]	
+				 ___________
+   Control M/C				putty .. 
+	
+   
+ in winx - putty
+ ----------
+  mc-1 [host01]		mc-2[host02]
+  -------------		------------
+  Linux 		Linux
+    |<--------------------->|
+ 
+  ControlSystem		node system
+  - ansible		
+  
+ in winx Virtualbox
+	 ----------
+		|->virtual bridge 
+		|
+ [host01] CtrlSystem		[host02] Client/node 
+       |<------------------------>|
+ -----------------------------------------------------------------------------
+
+ [host01]<------->[host02]
+	 
+  ssh <host02>	  ssh <host01>
+  ...................//OK
+  |
+  |
+ ControlSystem
+ - OL7			Client   example
+   - ansible 		------   --------
+     --------
+ |
+ - OL7 -> ansible --version
+
+ __________________________________________________________________________________

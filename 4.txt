@@ -1,0 +1,420 @@
+ Recap
+ ------
+ playbook 
+ --------
+
+ 1. target section 
+ 2. variable section
+	->vars
+	->vars_prompt 
+
+ 3. tasks section
+	ansible module ...
+
+    when: <conditional> <== validation
+    with_items <== iteration
+    loop       <== iteration
+   ------------------------------------//
+
+ 4. handler section
+	ansible module
+
+ ----------- 
+ recap handler section
+ ----------------------
+	|->like tasks section - which contains ansible modules
+	
+	|-> execute based primary tasks section execution ->effect the m/c state
+	    state of the m/c is changed ->then handler section will execute.
+
+ 	|-> notify: <notifyName> - same as in handers section - handlersection name.
+
+ 
+	|->handler section will execute only one time, after complete all the
+	   primary task execution finally handler block execute.
+
+	|->we can use morethan one handlers 
+
+
+ tasks:
+ - module: ...
+   notify: callme
+
+ handlers:
+ - name: one
+   module: ...
+   listen: callme
+ - name: two
+   module: ...
+   listen: callme
+ - name: three
+   module: ...
+   listen: callme
+ -----------------------------------------------------------------------
+
+  Write a playbook
+
+  primary task - using copy module -> copy p1.sh to remote system
+				      file must be 777 (mode=777)
+			|
+			notify to handler
+				  -------
+				   |-> using shell module execute this script
+				       redirect script result to file
+				   |-> using fetch module copy the result file
+				       to control system.
+ ---------------------------------------------------------------------------
+  when: "Linux" == "Linux" and "RHL5" == "RLH5" or "Ubunut" == "centos" 
+	 -------(1)------       ------(2)------	    ==================
+		|			|		  F
+		T			T		  |
+			 and				  |
+		|_______________________|		  |
+			|				
+			|
+			True(T)---------------- or------ False(F)
+			|____________________________________|
+						|
+						True
+ 						
+
+		----------------->--------------
+
+
+
+
+ - command: <Linux os commands> (or) Linux script
+   -------
+ - shell: <Linux os command> (or) Linux script | >
+   -----
+ - reboot:
+   ------
+
+ - shell: yum -y install httpd 
+	  ---------------------
+			|-> os command
+
+ - yum: name="httpd" state=installed
+	-----------------------------
+		|->ansible module with args
+
+------------------------------------------------------------------------------------------
+ run_once: true 
+ delegate_to: <node>
+___________________________________________________________________________________
+ loop:
+ with_items:
+  Vs
+ with_fileglob: 
+ - file with meta chars(*)
+
+ with_fileglob:
+ - "/var/log/*.log"
+ - "/etc/*.conf"
+ - "~/*.sh"
+      |__
+
+
+ tasks:
+ - debug: msg="file name:{{item}}"
+   with_fileglob:
+   - "/etc/*.conf"  
+____________________________________________________________________________________
+ Template section
+ ..................
+  - jinja template script
+    .....................
+	|->file.j2
+
+
+ jinja2 template - template code = embedded with existing html tag
+		   .............
+			|->dynamic value to page	      ________
+		 					Total:|__694__|
+		 - template code			<h1><font color=green>Total:{{var}}</font></h1>
+		   .............
+			|-> formatted result - o/p file
+ Syntax:-
+ ---------
+  
+    {{variable}}
+    {{expression}}
+
+   {%if condition %}	{% for variable in collection %}
+	...			...	   ----------
+	...					|-array/object
+   {% endif %}		 {% endfor %}
+				
+ 
+ template: args
+
+ file: p1.txt
+ --------------
+ Hello {{myvar}}
+ ---------------
+
+  vars:
+  - myvar: Leo
+  tasks: 
+  - copy: src=p1.txt dest=/tmp/p2.txt		- remote m/c
+						- cat /tmp/p2.txt
+						  Hello {{myvar}}
+		Vs
+  - template: src=p1.txt dest=/tmp/p3.txt	- remote m/c
+						  cat /tmp/p3.txt
+						  Hello Leo
+
+
+ __________________________________________________________________________________
+  asyc,poll
+  -----------
+ By default ansible runs tasks index by index (one task after another task)
+				-  , - , -	  
+ 
+  [ task-1, task-2,...,....]
+     time-  ....	
+     |	
+    background
+
+  asyc: <total time allowed to complete the task>
+  -----
+     |->sends the task in the background ...
+  |
+  poll - track the status of the job which was invoked by async 
+ 
+  poll: <value>
+	 -----
+	  |- how frequent it would check if the background task is completed or not.
+  
+  - command: yum update -y
+    async: 60
+    poll:  	
+    ..
+  - debug: msg="OK"		
+  ------------------------------------------------------------------
+
+  tasks: 
+  - module: params
+  - module: params
+
+  tasks: [{},{}]
+	  .. ..
+	  0  1  
+	  |  |_1minute
+	 5mts  ---
+	 - 1minute
+	   .....
+	
+ until: ....
+ retries: count
+ 
+ --------------------------------------------------------------------------------------------------------------
+  set_fact
+  ________
+  |
+  |
+  set_fact:
+     var: <value>
+
+
+  vars:
+  - mycode: 1234 <== declare & initialize
+
+  tasks:
+  - name: ...
+    set_fact: myvalue: <value> <== dynamic initialization
+    .........	
+
+
+   ansible filters
+   ----------------
+	|->{{input_variable|filter}}
+				|
+				|
+	set_fact: r:-----<----------
+		  |	o/p
+		  |
+ 	 	....
+
+ 
+	{{input_variable | filter }}
+	  ^^^^^^^^^^^^^^   ------
+	  input source		|___ reading input from <input_variable> then
+	  -vars			     process (execute/manipulate) it - return
+	  -register		     result to set_fact variable
+	  -env
+	  -host/group
+	  - ...
+
+ 
+ set_fact: r={{input_variable | filter }}
+	   |	---(1)---->------(2)--
+           ^   |		  |
+           |----<-----------------|---------
+	  (3)
+
+  variable 'r' is holding filter result.
+ -------------------------------------------------------------
+
+  lookup('file','/var/log/r1.log')
+  	  ----  ----------------
+	  |
+	name of the lookup 
+  
+ set_fact: r="{{lookup('file','/var/log/r1.log')}}"
+  
+ ec2_key: name=k1 key="{{lookup('file','file.pub')}}"
+  
+ lookup("pipe","git ....")
+  
+ lookup("env","SHELL")
+ 			
+	
+-----------------------------------------------------------------------------------
+  Regx chars
+  ----------
+  1.Basic Regx (BRE) - single
+  _____________________________
+	 
+  ^  $  ^pattern$  . .*  [] ^[] []$ [^ ] 
+			 ----------------
+			  |->char class - [a-z] <= match any lower case chars
+					  [A-Z] <= match any uppercase chars
+				[a-zA-Z] <= match any alpha 
+				[0-9] <= match any digits
+
+				[a-zA-Z0-9] <= any alpha numbers
+
+    ^[  ] - line startswith chars
+
+     [^  ] - NOT match 
+
+  ^[a-z] - line starts with any lowercase chars 
+   
+   [^a-z] - not matching any lowercase chars 
+ 
+  2.Extend Regx (ERE)
+  --------------------
+	|-> more than one pattern search
+
+  pattern1|pattern2 - any onepattern is match ->True
+
+  (pattern1)(pattern2) - both pattern should match same order 
+   ........  .........
+  
+  <pattern>+  - 1 or more 
+  
+   [a-z]+ - any single lowercase or more lower case chars
+   
+   [0-9]+  match single digit or more digits
+
+   ab+c => abc abbbbbbbbbbc //matched
+    
+  <pattern>{n} - n times
+
+  ab{3}c -> abbbc //matched ; abc abbc abbbbc 
+			      -----------------//not-matched 
+
+
+
+
+	
+ '^a.*i(.*)$' <== ^pattern$
+
+ __________________________________________________________________________________
+ 
+ Write a playbook
+ 
+ ansible_facts ->convert to json //content - use copy module,content attribute
+				  	   - write data to f.json
+  to_json
+ 
+
+ -----------------------------------------------------------------------------
+
+ ansible-playbook --start-at-task=<taskname> filename.yml
+				  ---------
+
+ Tags
+ 
+ tags:
+ - <tagName>
+ - <tagName>
+
+ ansible-playbook filename.yml --list-tags
+			       --list-tasks
+			       --list-hosts
+
+ ansible-playbook -t <tagName1>,<tagName2> filename.yml
+
+ ansible-playbook --tags=<tagName1>,<tagName2> filename.yml
+
+ ansible-playbook --skip-tags=<tagName1>,<tagName2> filename.yml
+
+ -----------------------------------------------------------------------------
+ ansible-playbook filename.yml -v
+			       -vvvvv
+ strategy: debug
+ tasks:
+  ...
+
+
+ (debug) p task
+ ...
+ (debug) p result
+
+ debugging commands
+ ---------------------
+  p var - print var value
+  -
+  p task  - print the name of the task that failed
+  
+  p task.args - the module arguments
+  
+  p vars -  value of all the variables 
+
+  help - show help message
+ 
+  q - quit debugger
+  
+  c - continue execution play 
+ ...
+  
+
+ ----------------------------------------------------------
+ block
+ -----
+  ->group of tasks
+  |
+  ->common validation
+  ->common error handling 
+
+ block
+ rescue
+ always
+ -------
+ block:
+    ....
+    ....
+ resuce:
+   ... Error handling
+ always:
+   ... always running block 
+
+
+
+  block:
+    tasks:
+ 	....
+	
+	....
+    when <condition>
+
+  block:
+    tasks:
+ 	....
+ 
+    ignore_errors: yes
+  	
+ 
+--------------------------------------------------------------------------------

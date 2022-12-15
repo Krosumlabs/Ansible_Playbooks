@@ -1,0 +1,732 @@
+ Ansible
+ - It is an open source configuration management tool
+ |
+ - There is no agent,Agentless architecture
+ |
+ - There is no system service is required to start ansible
+ |
+ - SSH connection 
+ |
+ - It uses a playbook - like a script - describe jobs 
+ |
+ - connects nodes and pushes small programs called module(python-file)
+   execute this module on the remote system and removed it.
+   there is record/history recorded to remote system.
+ |
+ - ControlSystem - manage other m/c 
+   -------------
+	|->install - ansible 
+	|->ansible.cfg <== entry point to ansible
+	   -----------
+		|->map to inventory file
+			  ---------------
+			   |->contains remote node details(IP,FQDN,Alias,others)
+	
+ |-Ansible will look into ansible.cfg file ->inventory file ->establish SSHConnection
+   to all managed nodes in parallely.
+
+ ----------------
+ 1. ansible ad-hoc command - commandline - runtime
+ 2. ansible playbook ->file.yml 
+		       --------
+
+ To run adhoc command => ansible 
+			 --------
+ To run playbook =>ansible-playbook
+		   -----------------
+ 	
+[Ctrlnode]-newprocess creation then SSH
+	|-------------SSH----(1)-------[node1]
+     |---------------------------------create one python subshell(child)
+		------------------------push module(file.py)
+						child-python ->execute file.py
+						....
+						....
+						....
+						|
+		-------------<------------------
+			json 		
+					process(python execution) exit
+
+ multiprocessing
+ paramiko
+ ..................//python module
+	|
+	parentpython(ctrlsystem)-----------------child-python(remote system)
+						|
+						push the module & execute this module
+
+	
+$ sudo subscription-manager repos --enable rhel-7-server-ansible-2.9-rpms 
+$ git clone https://github.com/ansible/ansible.git
+$ cd ./ansible
+$ make rpm
+$ sudo rpm -Uvh ./rpm-build/ansible-*.noarch.rpm
+
+  (or)
+
+yum install –y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+yum install –y ansible 
+ansible     - - version 
+ 
+ --------------------------------------------
+ apt-get update
+ apt-get install software-properties-common
+ apt-add-repository ppa:ansible/ansible
+ apt-get update
+ |
+ apt-get install ansible
+ -------------------------------------------
+ --------------------
+ pip3 install ansible <== 
+ --------------------
+ 
+ To test ansible is installed or not ?
+
+ ansible --version 
+								
+______________________________________________________________________________
+ |
+ Create an Inventory file - Text file
+           ---------------
+
+ /etc/ansible/ansible.cfg
+	     -------------
+			 |
+ By default /etc/ansible/hosts
+			 |
+			Remote node details
+
+ -> create our own custome inventory file
+	   -------------------------
+
+ Example:  /D1/myinventory
+		...
+
+ ansible ...  -i /D1/
+	      _______
+  |
+  |
+ refer by default /etc/ansible/hosts file - if -i option is omitted
+ 
+ (or)
+ Goto Custome Inventory directory
+ |
+ then you can run ansible..../ansible-playbook 
+
+ 
+
+ Inventory file
+
+ [GroupName]
+ nodeName ansible_ssh_host=IP ansible_ssh_pass=<password>
+ --------
+  |->IP (or) FQDN (or) Alias 
+
+  
+ --------------------------------------------------------------------------
+ ansible <remotenode>  -m <module>
+	 ------------
+
+ To test the remote m/c
+ -----------------------
+ ansible webservers -m ping
+	 
+ ansible example -m ping
+  
+ Green - Success
+ Red  - Failed
+ Pink - Warining
+ Yellow - change the m/c state 
+ ......          .............
+ |
+ color
+
+ ---------------------------------------------------------------------------------
+ ansible adhoc - commandline 
+ | 
+ |
+ ansible adhoc commandline syntax
+ |
+ ansible <remotenode> -m ansible_module -a "arguments"
+					   "key=value .. K=V"
+					   _____________________
+ 
+ p1.sh
+ -------
+ while read var
+ do
+	ssh $var<<abc
+		uptime
+		ps
+		vmstat
+		..
+		rpm -q gcc >/dev/null 2>&1
+		if [ $? -eq 0 ];then
+			echo "Package is already exists"
+		else
+			yum -y install gcc  >>/var/log/repo.log 2>&1
+			if [ $? -eq 0 ];then
+				echo "Pacakge installation is success"
+			else
+				echo "Installation is failed - /var/log/repo.log"
+			fi
+		fi
+	abc
+ done<server.log
+ 
+ file:server.log
+ ----------------
+ node1
+ node2
+ node3
+ node4
+ ---------------- 
+
+ 			Vs
+
+ ansible webservers -m yum -a "name=gcc state=installed" 
+
+
+ [webservers]
+  node1
+  node2
+  node3
+  node4
+ ----------------
+  -inventoryfile
+ 
+ _____________________________________________________________________________________
+ 
+ ansible <remote_node> -m <module> -a "key=value key=value..K=V"
+				      |-----------------------|
+ <module> - ansible module
+	    --------------
+		|->filename.py
+
+ 
+ ansible-doc <module> <== like a man page
+ 
+ ansible-doc yum
+	     ...
+	     ...
+ -----------------------------------------------------------------------------------------
+ ansible <remotenode> -m <module> -a args
+				     -----
+				    key=value key=value ..Kn=Vn
+ 
+ 
+ ansible example -m command -a "uptime" -v 
+ ansible example -m command -a "uptime" -vv
+
+ ANSIBLE_KEEP_REMOTE_FILES=1 ansible ....
+ --------------------------- -----------------
+  enable
+   |__ ~/.ansible/tmp/<dir>/file.py
+ ------------------------------------------------------------------------------------
+ fetch module
+ -------------
+  |->copy the file from <remote node m/c> to ctrl system
+	               ------------------    ------------
+
+ fileX <remotenode>/<dirpath>/file2
+ fileY <remotenode>/<dirpath>/file2
+ fileZ <remotenode>/<dirpath>/file2
+	  =============================
+	   |<== ctrl system
+
+ ansible webservers -m fetch -a "src=remote_system_file dest=CtrlSystem_dir_file"
+
+  Vs
+
+ ansible webservers -m copy -a "src=CtrlSystem_dir_file dest=remote_system_file"
+  
+ 
+ ansible-doc fetch
+ ansible-doc copy
+ ansible-doc yum
+ ..
+
+ To get list of loaded ansible modules in control system
+ 
+ ansible-doc --list 
+ ----------------------------------------------------------------------------------
+ 
+ ansible example -m copy -a "src=file1.log dest=/tmp/file2.log"
+						      ---------
+ |
+ ansible example -m copy -a "content=Some text dest=/tmp/file3.log"
+				     ---------
+					|
+				   user definedText
+				   content
+ 
+ Recap yum command in linux commandline
+      -----
+	|
+  -m yum -a "name=<packagename> state=installed"
+				      absent
+				       
+
+ 
+ -m ping
+ -m command
+ -m shell
+
+ -m fetch
+ -m copy
+
+ -m yum 
+ -m apt	
+ ...
+ ...
+ ___________________________________________________________________________________
+  Tasks
+  --------
+  Q1. using command module - display remote system hostname
+
+ # ansible webservers -m command -a "hostname"  (or) -a "uname -n"  
+ 
+  Q2. using shell module - execute following commands & redirect command results
+			   to file
+  
+  ansible webservers -m shell -a "echo 'Total no.of process count:`ps -e|wc -l`' >>/var/log/r1.log"
+  ansible webservers -m shell -a "echo 'Total no.of loaded kernel modules:`lsmod|wc -l`' >>/var/log/r1.log"
+   
+  Q3. using fetch module - copy this log file to control system
+
+ # ansible webservers -m fetch -a "src=/var/log/r1.log dest=/tmp"
+    
+
+  Q4. in ctrlsystem - write a shell script file
+      using copy module - copy this shell script file to remote system
+			  assign execute permission(mode=777)
+			  			    ---- ---
+
+  vi p1.sh {enter}
+  echo "Test-script"
+  :wq
+  ls -l p1.sh {enter}
+  -rw-r--r-- .... p1.sh
+  
+  # ansible webservers -m copy -a "src=p1.sh dest=/tmp/p1.sh mode=777"
+  
+  Q5. using command module execute this shell script.
+
+  ansible webservers -m shell -a "/tmp/p1.sh"
+				  -----------//executable 
+ _____________________________________________________________________________________
+ 
+  ansible webserves -a "uptime" <== default module is module
+		   __
+ 
+  ansible webservers -m <moduleName> -a "arguments"
+				     -a "key=value"
+		      _____________
+ 
+
+ file releated operation -> file module
+			    ----
+ -----------------------------------------------------------------------------------
+  |
+  YAML 
+  ----
+  filename.yaml (or) filename.yml
+  
+   1. in ansible ->playbook is yaml format
+   2. configuration  
+
+  Key: value
+  ...........
+
+  key:<space>Value
+  ----------------//format
+		
+  key: value
+       ------
+	  |->1.scalar (SingleValue) - numbers,str,bool,None
+	  |->2.collection - array /object
+			    -----  ======
+			    |		|->key: value //keybased 
+			  index based	      {}
+			    []	
+
+  net_info 
+  ---------
+  interface: eth0
+  onboot: yes
+  IP: 10.20.30.40
+  prefix: 24
+  bootproto: static
+	     ---------//Scalar
+ Key: Value
+ -----------//Scalar 	
+  
+  Array - collection of scalars - index based 
+
+  K: [V1,V2,V3,V4,V5]
+  -     |  |  |  |
+      0  1   2  3  4 <== index 
+  
+ net_info: [eth0,yes,10.20.30.40,24,static]
+ --------   -------------------------------
+ 
+ K[index] (or) K.index <== to fetch single value from an array
+  		
+ K[0] ->V1  (or) K.0 ->V1 
+
+ net_info[0] (or) net_info.0 <= to fetch single value from an array
+         ---               --
+ 
+ K: [V1,V2,V3,V4,V5]  K: Array
+ -- ================ 
+ K: {K1: V1,K2: V2,K3: V3}  K: object
+ -- ======================
+
+ K['K1'] ->V1
+
+ (or)
+
+ K.'K1' ->V1
+
+ ------------------------------------------
+ findex: 1001
+ fuser: userA
+ fsize: 10KB
+ ---------------//(1)
+
+ finfo: [1001,userA,10KB] 
+ --------------------------//(2)
+
+ finfo: {K1: 1001,K2: userA,K3: 10KB}
+ --------------------------------------//(3)
+
+ 
+ Array of Array	 =>  [ [],[],[],[],....[] ]
+
+ Array of object =>  [ {},{},{},{},....{} ]
+
+ object of Array =>  {K1: [],K2: [],K3: [],...Kn: []}
+
+ object of object  => {K1: {},K2: {},K3: {},...Kn: {}}
+ ....................  --------------------------------
+
+
+Array of Array	 =>  [ [],[],[],[],....[] ]
+
+		0      1    2     0   1   2     0      1
+  servers: [ ['RHL5',RHL6,RHL7],[OL5,OL6,OL7],[SunOS1,SunOS2] ]
+	     =====0thindex=====|==1st index==||==2nd index==| 
+  
+  servers[0][0] (or) servers.0.0
+  -------------------------------->RHL5
+
+  servers[0][1] (or) servers.0.1 ->RHL6
+
+  servers[2][0]  (or) servers.2.0 ->SunOS1
+ 
+ ----------
+
+ Array of object =>  [ {},{},{},{},....{} ]
+
+  servers: [ {RHL5: 10.20.30.40,RHL6: 10.20.3.45} ]
+  -------- - ====== =================
+  
+  servers[0][RHL5] ->10.20.30.40 <-- servers.0.RHL5
+ ---------------
+
+  object of array => {K1: [],K2: [],...Kn: []}
+ 
+{Ubuntu: [10.20.30.40,host01,/etc/issues],OL7: [10.20.33.45,host02,/etc/oracle-release]}
+          ------0th--|--1st-|----2nd----
+ ------  ================================  
+
+  ['Ubuntu'][0]
+  -------------
+  Ubuntu.0 
+  -------==
+ ------------------------------------------------------------------
+
+ servers: {'K1': {'S1': unix}, 'K2': {'S1': Linux},'K3': {'S1': Qnx}}
+           ----- ============   ---- =============  ---- ===========
+ 
+ servers['K1'] ->{'S1': unix}
+ |
+ servers['K2'] ->{'S1': Linux}
+ 
+ servers.K1.S1 ->unix 
+ servers.K2.S1 ->Linux 
+ servers.K3.S1 ->Qnx
+ -------------------------------------------------------------------------------
+ 
+ Key: [V1,V2,V3,...Vn] 
+	
+    (or)
+
+ Key:
+ - V1
+ - V2
+ - V3
+ - V4
+ ..
+ - Vn
+ 
+
+ Key: {K1: V1,K2: V2,K3: V3}	-m yum -a "name=zsh state=installed"
+					  --------------------------
+	(or)	
+		
+ Key:				   yum:
+ <><>K1:<>V1			      name: zsh
+ <><>K2:<>V2			      state: installed 
+ <><>K3:<>V3
+ 
+ <> - 1space 
+ <><>- 2space
+ --------------------------------------------------------------------------
+
+ tasks: [ {name: task-1},{name: task-2},{name: task-3} ]
+ -----  |	object	|  object      |  object       |
+ |	|_______________|______________|_______________|
+ Key    |					       |
+		        Array
+ 
+ tasks:				tasks:
+ - name: task-1			- name: task-1
+ - name: task-2		Vs        name: task-2 <== duplicate entry
+ - name: task-3                   name: task-3 <== duplicate entry
+
+ ___________________________________________________________________________________
+
+ ansible webservers -m yum -a "name=zsh state=installed" 
+		    ____________________________________
+				|->Actual execution 
+				|   task section 
+
+
+
+ tasks:
+ - name: <Name of the tasks>
+   module: <Name of the Module>
+   <><>Key:<>Value
+   <><>Key:<>Value
+
+ tasks:
+ - name: Install a zsh shell
+   yum:
+     name: zsh
+     start: installed
+ 
+ ansible <remotehost> -m yum -a "name=httpd state=latest"
+				|-----------------------|		
+ 
+ ansible <remotehost> -m yum -a "name=httpd enablereo=testing state=latest"
+				|-----------------------------------------|
+ 
+ ansible <remotehost> -m command -a "uptime"
+
+ tasks:
+ - name: dispaly loadbalance
+   command: uptime
+ ----------------------------------------------------------------------------------
+ Ansible playbook 
+  
+ 1. target section  - remote node details 
+    --------------
+	|-tag name is called hosts
+	  ---(key)	     =====
+
+	 hosts:<space>RemoteHost/Group <== refer from inventory file
+
+
+ 2. variable section 
+    -----------------
+        |->placeholder - we can define dynamic values 
+
+ 3. task section
+    ------------
+	|-> ansiblemodule & params are defined this section
+
+ 4. handler section
+    ---------------
+	|-> remote m/c state based action will execute
+	    //secondary task section 
+
+ 5. template section
+    ----------------
+	|->jija2 template code
+
+ ____________________________________________________________________________
+ file format is 
+
+ ---
+ - name: <name of the playbook>
+   hosts: <name of remote_node>
+   tasks:
+   - name: <Task-1>
+     module: Action-1
+   - name: <Task-2>
+     module: Action-2
+   ..
+   - name: <task-n>
+     module: Action-n
+ ________________________________________________________________________________
+
+ ansible webservers -m command -a "uptime" <== adhoc commandline 
+
+ file: p1.yml
+ 
+ ---
+ - name: sample playbook
+   hosts: webservers
+   tasks:
+   - name: Display CPU Loadbalance
+     command: uptime
+ 
+
+ ansible-playbook p1.yml {Enter} 
+ ---------------- ======
+
+
+ ansible-playbook p1.yml --syntax-check {Enter} <== Verify ansible yaml syntax
+			 ______________
+
+ ansible-playbook p1.yml -vvvvv
+ 
+ ----------------------------------------------------------------------------------------------
+ ---
+ - name: Install zsh package
+   hosts: student
+   tasks:
+   - name: Installing zsh package
+     yum: 
+       name: zsh
+       state: latest
+
+	 (or)
+ ---
+ - name: Install zsh package
+   hosts: student
+   tasks:
+   - name: Installing zsh package
+     yum: name=zsh  state=latest
+	  -----------------------
+ _______________________________________________________________________________________________________
+ 
+
+ tasks:
+ - module: params
+   register: <userdefined_Register_Variable>
+   --------
+    |
+    keyword
+  
+  To capture module execution result(stdout/stderr other details - json format)
+	
+  
+    [Ansible-playbook] ----------->------[Monitor]
+				STDOUT    .......
+			- debug <== module
+			_______
+ 			
+  - name: display Hello message to monitor	 
+    debug:
+      msg: Hello <== user defined string
+  - name: display variable value to monitor
+    debug:
+      var: variable <== named variable
+
+
+ ------------------------------------------------------------------------------
+ 
+   
+ result: {'changed': true,'cmd': ['uptime'],'rc': 0,'stdout': 'cmd_output'}
+ ------  __________________________________________________________________ 
+  |					|
+ Key					VALUE
+
+ result.changed  => result['changed']
+ 
+ result.cmd =>['uptime']
+ |
+ result.cmd.0  =>result['cmd'][0]
+		       -----------
+ 
+ --------------------------------------------------------------------------------
+
+ - name: <user defined message>
+   hosts: <remote host>
+   tasks:
+   - name: <user defined message>
+     module: params
+    ------------------------------//Valid format
+	Vs
+
+  - hosts: <remote host>
+    tasks:
+    - module: params
+   -------------------------------//valid format
+  
+  - name: <description> is optional tag.
+ ________________________________________________________________________________
+
+
+    tasks:
+    - command: uptime
+      register: result
+    - shell: free -m|awk '{print $2}'
+      register: result <== duplicate variable
+    - command: whoami
+      register: result <== duplicate variable
+    - debug: var=result.stdout
+		 -------------
+		    |
+		    |-->login name result only
+
+	Vs
+	
+  tasks:
+    - command: uptime
+      register: result
+    - debug: var=result.stdout  =====> display uptime o/p only
+    - shell: free -m|awk '{print $2}'
+      register: result  
+    - debug: var=result.stdout  ===============>display free o/p only
+    - command: whoami
+      register: result  
+    - debug: var=result.stdout  ================>display whoami o/p only
+	
+
+ 
+ tasks: [{command: uptime},{command: uptime}]
+	  
+ dict/hash/object - key: value //pair
+		    ----
+		     |-key mustbe unique 
+
+ tasks: [ {command: uptime,command: date} ]
+	   -------         -------
+				|<= duplicate key
+
+
+ tasks: [ {command: uptime,shell: date} ]
+	   -------         -------
+	  |___________________________|
+			0th-index - single index there are more than one module 
+			is placed 		      
+
+  
+ tasks: [ {command: uptime},{shell: date} ]
+	   -------           -------
+
+ tasks:				Vs	 tasks:
+ - command: uptime			 - command: uptime
+ - shell: date				   shell: date
+					  -------------//invalid
+					  single index there are more than one
+					  module is placed 
+
+ tasks: [ {module1},{module2},{module3},{module4},{module5}..{moduleN} ]
+	   
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
