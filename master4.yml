@@ -1,0 +1,11 @@
+---
+- hosts: webservers
+  pre_tasks: 
+  - debug: msg="Initialization" 
+  - command:  mkdir -p /tmp/test1
+  roles:
+  - { role: dev, when: ansible_os_family == "RedHat"}
+  - { role: qa, when: ansible_os_family == "Debian"}
+  post_tasks:
+  - command: rm -r /tmp/test1
+  - debug: msg="Thank you" 
