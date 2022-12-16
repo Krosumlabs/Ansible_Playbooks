@@ -1,0 +1,11 @@
+---
+- hosts: localhost
+  tasks:
+  - debug: msg="Hello"
+  - meta: clear_facts
+  - debug: var=ansible_mem_free
+  - meta: end_play # end of the task
+  - debug: msg="OK-1"
+  - debug: msg="OK-2"
+  - debug: msg="OK-3"
+  - debug: msg="OK-4"

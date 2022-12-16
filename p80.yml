@@ -1,0 +1,7 @@
+---
+- hosts: localhost
+  tasks:
+  - include_vars: 
+       file: "t1.yml"
+       #name: myfname
+  - debug: msg="File name is:{{myfname}}"

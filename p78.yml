@@ -1,0 +1,13 @@
+---
+- hosts: webservers
+  tasks:
+  - name: Task-1
+    debug: msg="Test-play-1"
+  - name: Task-2
+    command: date
+  - include: f1.yml
+  - include: f2.yml
+    when: ansible_distribution == "OracleLinux"
+    register: output
+  - debug: var=output.stdout_lines
+  - debug: var=result.stdout_lines

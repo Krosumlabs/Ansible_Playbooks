@@ -1,0 +1,14 @@
+---
+- hosts: webservers
+  tasks:
+  - name: task-1
+    command: uptime
+    register: result
+  - name: task-2
+    command: df -Th
+    register: output
+    ignore_errors: true
+  - debug: var=result.stdout
+    when: result.rc == 0
+  - debug: var=output.stdout_lines
+    when: output.rc == 0

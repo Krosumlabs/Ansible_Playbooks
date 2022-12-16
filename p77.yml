@@ -1,0 +1,6 @@
+---
+- name: sample playbook execution
+  hosts: localhost
+  tasks:
+  - name: Display CPU LoadBalance
+    command: uptime
